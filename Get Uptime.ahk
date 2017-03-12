@@ -1,32 +1,60 @@
-;;--- Head --- AHK ---
-;; Appear uptime one time (auto-close after 10 seconds) a day and offer to reboot each 1 of the month.
-;; On each 24 hours of running is appear the msg
-;; Get uptime, shutdowns, reboot, sleep & close session
+;;--- Head --- Informations --- AHK ---
 
-	SetEnv, title, Get Uptime
-	SetEnv, mode, Uptime & reboot (once a month)
-	SetEnv, version, Version 2017-03-06
-	SetEnv, author, LostByteSoft
+;;	Appear uptime one time (auto-close after 10 seconds) a day and offer to reboot each 1 of the month.
+;;	On each 24 hours of running is appear the msg
+;;	Get uptime, shutdowns, reboot, sleep & close session
+;;	Compatibility: Windows
+;;	All files must be in same folder. Where you want.
+;;	64 bit AHK version : 1.1.24.2 64 bit Unicode
 
 ;;--- Softwares options ---
 
+	SetWorkingDir, %A_ScriptDir%
 	#SingleInstance Force
 	#Persistent
 
+	SetEnv, title, Get Uptime
+	SetEnv, mode, Uptime & reboot (once a month)
+	SetEnv, version, Version 2017-03-12
+	SetEnv, author, LostByteSoft
+
+	FileInstall, ico_reboot.ico, ico_reboot.ico,0
+	FileInstall, Ico_Session.ico, Ico_Session.ico, 0
+	FileInstall, ico_shut.ico, ico_shut.ico, 0
+	FileInstall, ico_time.ico, ico_time.ico, 0
+	FileInstall, ico_veille.ico, ico_veille.ico, 0
+	FileInstall, ico_lock.ico, ico_lock.ico, 0
+	FileInstall, ico_secret.ico, ico_secret.ico, 0
+
 ;;--- Tray options ---
 
-	Menu, tray, add, Refresh, doReload		; Reload the script.
-	Menu, tray, add, +-------, secret		; empty space #1
-	Menu, tray, add, Reboot PC, Rebootpc
+	Menu, Tray, NoStandard
+	Menu, tray, add, Exit %title%, GuiClose				; GuiClose exit program
+	Menu, Tray, Icon, Exit %title%, ico_shut.ico
+	Menu, tray, add, Refresh, doReload					; Reload the script.
+	Menu, Tray, Icon, Refresh, ico_reboot.ico, 1
+	Menu, tray, add, Secret MsgBox, secret
+	Menu, Tray, Icon, Secret MsgBox, ico_lock.ico, 1
+	Menu, tray, add,
+	Menu, tray, add, Reboot PC, Reboot
+	Menu, Tray, Icon, Reboot PC, ico_reboot.ico, 1
 	Menu, tray, add, Shutdown PC, Shutdownpc
+	Menu, Tray, Icon, Shutdown PC, ico_shut.ico, 1
 	Menu, tray, add, Session Close, Sessionpc
+	Menu, Tray, Icon, Session Close, Ico_Session.ico, 1
 	Menu, tray, add, Sleep PC, Sleeppc
-	Menu, tray, add, ++------, about2		; empty space #2
-	Menu, tray, add, About, about1			; Creates a new menu item.
-	Menu, tray, add, Version, version		; About version
-	Menu, tray, add, +++-----, about3		; empty space #3
+	Menu, Tray, Icon, Sleep PC, ico_veille.ico, 1
+	Menu, tray, add,
+	Menu, tray, add, About - LostByteSoft, about				; Creates a new menu item.
+	Menu, Tray, Icon, About - LostByteSoft, ico_about.ico, 1
+	Menu, tray, add, Version , version					; About version
+	Menu, Tray, Icon, Version, ico_about.ico, 1
+	Menu, tray, add,
 	Menu, tray, add, Show Baloon time, showbaloon
-	Menu, tray, add, Get uptime, uptime		; Get the message now
+	Menu, Tray, Icon, Show Baloon time, ico_time.ico, 1
+	Menu, tray, add, Get uptime, uptime					; Get the message now
+	Menu, Tray, Icon, Get uptime, ico_time.ico, 1
+	Menu, Tray, Tip, %title%
 
 ;;--- Software start here ---
 
@@ -71,6 +99,7 @@ sleep1:
 	Menu, Tray, Icon, ico_time.ico
 	sleep, 86400000
 	goto, loop
+
 	;; 1000 = 1 sec
 	;; 60000 = 1 min
 	;; 3 600 000 = 1 hour
@@ -90,11 +119,37 @@ sleep2:
 	sleep, 86400000
 	goto, loop
 
+secret:
+	Menu, Tray, Icon, ico_secret.ico
+	MsgBox, 0, GET UPTIME SECRET, title=%title% mode=%mode% version=%version% t_UpTime=%t_UpTime% author=%author% A_WorkingDir=%A_WorkingDir%
+	Menu, Tray, Icon, ico_time.ico
+	Goto, Start
+
+;--- Computer mode ---
+
 reboot:
 	Menu, Tray, Icon, ico_shut.ico
 	sleep, 1000
 	Shutdown, 6
 	ExitApp
+
+shutdownpc:
+	Menu, Tray, Icon, ico_shut.ico
+	sleep, 1000
+	Shutdown, 5
+	ExitApp
+
+sessionpc:
+	Menu, Tray, Icon, Ico_Session.ico
+	sleep, 1000
+	Shutdown, 0
+	Goto, Start
+
+sleeppc:
+	Menu, Tray, Icon, ico_veille.ico
+	sleep, 1000
+	DllCall("PowrProf\SetSuspendState", "int", 0, "int", 0, "int", 0)
+	Goto, Start
 
 ;;--- Quit (escape , esc) ---
 
@@ -103,16 +158,8 @@ reboot:
 
 ;;--- Tray Bar (must be at end of file) ---
 
-secret:
-	Menu, Tray, Icon, ico_reboot.ico
-	MsgBox, 0, GET UPTIME SECRET, title=%title% mode=%mode% version=%version% t_UpTime=%t_UpTime% author=%author%
-	Menu, Tray, Icon, ico_time.ico
-	Return
-
-about1:
-about2:
-about3:
-	TrayTip, %title%, %mode%, 2, 1
+about:
+	TrayTip, %title%, %mode% by %author%, 2, 1
 	Return
 
 showbaloon:
@@ -133,48 +180,39 @@ version:
 uptime:
 	goto, loop
 
-rebootpc:
-	Menu, Tray, Icon, ico_reboot.ico
-	sleep, 1000
-	Shutdown, 6
-	ExitApp
-
-shutdownpc:
-	Menu, Tray, Icon, ico_shut.ico
-	sleep, 1000
-	Shutdown, 5
-	ExitApp
-
-sessionpc:
-	Menu, Tray, Icon, Ico_Session.ico
-	sleep, 1000
-	Shutdown, 0
-	Return
-
-sleeppc:
-	Menu, Tray, Icon, ico_veille.ico
-	sleep, 1000
-	DllCall("PowrProf\SetSuspendState", "int", 0, "int", 0, "int", 0)
-	Return
 
 doReload:
 	Reload
 	Return
 
 ;;--- End of script ---
-
+;
 ;            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-;                    Version 2, December 2004
- 
-; Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>
- 
+;   Version 3.14159265358979323846264338327950288419716939937510582
+;                          March 2017
+;
 ; Everyone is permitted to copy and distribute verbatim or modified
 ; copies of this license document, and changing it is allowed as long
 ; as the name is changed.
- 
+;
 ;            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
 ;   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
- 
+;
 ;              You just DO WHAT THE FUCK YOU WANT TO.
-
+;
+;		     NO FUCKING WARRANTY AT ALL
+;
+;	As is customary and in compliance with current global and
+;	interplanetary regulations, the author of these pages disclaims
+;	all liability for the consequences of the advice given here,
+;	in particular in the event of partial or total destruction of
+;	the material, Loss of rights to the manufacturer's warranty,
+;	electrocution, drowning, divorce, civil war, the effects of
+;	radiation due to atomic fission, unexpected tax recalls or
+;	    encounters with extraterrestrial beings 'elsewhere.
+;
+;              LostByteSoft no copyright or copyleft.
+;
+;	If you are unhappy with this software i do not care.
+;
 ;;--- End of file ---
